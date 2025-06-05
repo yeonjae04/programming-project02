@@ -95,3 +95,5 @@ def get_advice(diary):
 print("hello world")
 
 print("안녕하세요")
+
+print("hihi")
