@@ -91,3 +91,5 @@ def get_advice(diary):
                 print(f" -{emotion}:{score}")
             else:
                 print(f"\n {date_str}의 일기가 존재하지 않습니다.")
+
+print("hello world")
