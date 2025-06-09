@@ -66,7 +66,7 @@ def get_summary(diary):
     else:
         print("요청실패")
 
-#사용자 일기 조언 함수수
+#사용자 일기 조언 함수
 def get_advice(diary):
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
@@ -124,6 +124,86 @@ def get_advice(diary):
                 print(f" -{emotion}:{score}")
             else:
                 print(f"\n {date_str}의 일기가 존재하지 않습니다.")
+
+#사용자 감정 분석 함수
+def get_emotion_scores(diary):
+    """
+    사용자의 일기를 바탕으로 감정을 분석하여 숫자(0~10)을 반환합니다.
+    감정은 기쁨, 슬픔, 분노, 불안, 혐오, 놀람 6가지입니다.
+    """
+    response = requests.post(
+        url="https://openrouter.ai/api/v1/chat/completions",
+        headers={
+            "Authorization": "Bearer <OPENROUTER_API_KEY>",
+            "Content-Type": "application/json"
+        },
+        data=json.dumps({
+            "model": "meta-llama/llama-3.3-8b-instruct:free",
+            "messages": [
+            {
+                "role": "user",
+                "content": (f"다음 일기를 읽고 감정 점수를 0부터 10까지 숫자로 분석해줘.\n"
+                f"다음과 같은 JSON 형태로 정확하게 출력해줘."
+                f'{{"기쁨":숫자, "슬픔":숫자, "분노":숫자, "불안":숫자, "혐오":숫자, "놀람":숫자}}'
+                f"{diary}"
+                )
+            } 
+         ]
+     })
+    )
+    if response.ok:
+        try:
+            result = response.json()
+            content = result["choices"][0]["message"]["content"]
+            emotion_data = json.loads(content)
+            return emotion_data
+        except Exception as e:
+            print("감정 분석을 불러오는 데 문제가 있어요:", e)
+            return {}
+    else:
+        print("감정 분석 요청실패")
+
+#감정분석 시각화 함수
+import matplotlib.pyplot as plt
+
+emotion_colors = {
+    "기쁨": "#FFD700",   # 노랑
+    "슬픔": "#1E90FF",   # 파랑
+    "분노": "#FF4500",   # 빨강
+    "불안": "#9370DB",   # 보라
+    "혐오": "#2E8B57",   # 초록
+    "놀람": "#E97E0B"    # 주황황
+}
+
+def visualize_emotion_scores(emotion_scores, date_str):
+    """
+    감정 점수를 막대그래프로 시각화하고 파일로 저장합니다.
+    
+    Parameters:
+    emotion scores(dict) : 감정별 점수
+    date (str): 날짜
+    """
+    emotions = ['기쁨', '슬픔', '분노', '불안', '혐오', '놀람']
+    scores = [emotion_scores.get(emotion,0) for emotion in emotions]
+    colors= [ emotion_colors[emotion] for emotion in emotions]
+
+    plt.figure(figsize=(8,6))
+    bars = plt.bar(emotions, scores, color = colors)
+
+    plt.ylim(0,10)
+    plt.title(f"{date_str} 감정 분석 결과")
+    plt.xlabel("감정")
+    plt.ylabel("점수(0~10)")
+
+    for bar, score in zip (bars, scores):
+        plt.text(bar.get_x() + bar.get_width()/2, score + 0.3, f"{score}", ha='center', va='bottom', fontsize=10)
+    
+    img_path = DATA_SAVE / f"{date_str}_emotion.png"
+    plt.tight_layout()
+    plt.savefig(img_path)
+    plt.close()
+    print(f"감정 이미지 저장됨: {img_path}")
+
 
 #사용자 선택 처리 함수
 def get_choices(choice:str):
