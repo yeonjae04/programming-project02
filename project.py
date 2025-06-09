@@ -164,8 +164,6 @@ def get_emotion_scores(diary):
         print("감정 분석 요청실패")
 
 #감정분석 시각화 함수
-import matplotlib.pyplot as plt
-
 emotion_colors = {
     "기쁨": "#FFD700",   # 노랑
     "슬픔": "#1E90FF",   # 파랑
