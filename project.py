@@ -1,8 +1,6 @@
 from pathlib import Path
 import json
 import matplotlib.pyplot as plt
-from collections import Counter
-import random
 import requests
 
 name = input("이름을 입력해주세요.:")
@@ -57,10 +55,15 @@ def get_summary(diary):
   })
 )
     if response.ok:
-        result = response.json()
-        output = result["choices"][0]["message"]["content"]
-        return output
+        try:
+            result = response.json()
+            output = result["choices"][0]["message"]["content"]
+            return output
+        except Exception as e:
+            print("요약 파싱 오류:",e)
+            return "요약실패"
     else:
+        print("요약 요청 실패:", response.status_code)
         print("요청실패")
 
 #사용자 일기 조언 함수
@@ -83,11 +86,16 @@ def get_advice(diary):
   })
 )
     if response.ok:
-        result = response.json()
-        output = result["choices"][0]["message"]["content"]
-        return output
+        try:
+            result = response.json()
+            output = result["choices"][0]["message"]["content"]
+            return output
+        except Exception as e:
+            print("조언 파싱 오류:", e)
+            return "조언 실패"
     else:
-        print("요청실패")
+        print("조언 요청 실패:", response.status_code)
+        return "조언 실패"
 
        
 emotion ={}
@@ -98,6 +106,11 @@ def get_emotion_scores(diary):
     사용자의 일기를 바탕으로 감정을 분석하여 숫자(0~10)을 반환합니다.
     감정은 기쁨, 슬픔, 분노, 불안, 혐오, 놀람 6가지입니다.
     """
+    prompt = (
+        f"다음 일기를 읽고 감정을 0~10 숫자로 분석해줘.\n"
+        f"정확히 이 JSON 형식으로만 응답해줘:\n"
+        f'{{"기쁨":숫자, "슬픔":숫자, "분노":숫자, "불안":숫자, "혐오":숫자, "놀람":숫자}}\n\n{diary}'
+    )
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={
@@ -109,11 +122,7 @@ def get_emotion_scores(diary):
             "messages": [
             {
                 "role": "user",
-                "content": (f"다음 일기를 읽고 감정 점수를 0부터 10까지 숫자로 분석해줘.\n"
-                f"다음과 같은 JSON 형태로 정확하게 출력해줘."
-                f'{{"기쁨":숫자, "슬픔":숫자, "분노":숫자, "불안":숫자, "혐오":숫자, "놀람":숫자}}'
-                f"{diary}"
-                )
+                "content": prompt
             } 
          ]
      })
@@ -126,9 +135,11 @@ def get_emotion_scores(diary):
             return emotion_data
         except Exception as e:
             print("감정 분석을 불러오는 데 문제가 있어요:", e)
+            print("응답 내용:\n", result["choices"][0]["message"]["content"])
             return {}
     else:
-        print("감정 분석 요청실패")
+        print("감정 분석 요청실패", response.status_code)
+        return {}
 
 #감정분석 시각화 함수
 emotion_colors = {
