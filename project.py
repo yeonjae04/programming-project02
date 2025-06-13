@@ -40,7 +40,7 @@ def get_summary(diary):
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={
-            "Authorization": "Bearer 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",
+            "Authorization": "Bearer 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",
             "Content-Type": "application/json"
   },
         data=json.dumps({
@@ -71,7 +71,7 @@ def get_advice(diary):
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={
-            "Authorization": "Bearer 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",
+            "Authorization": "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",
             "Content-Type": "application/json"
   },
         data=json.dumps({
@@ -114,7 +114,7 @@ def get_emotion_scores(diary):
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={
-            "Authorization": "Bearer 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",
+            "Authorization": "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",
             "Content-Type": "application/json"
         },
         data=json.dumps({
