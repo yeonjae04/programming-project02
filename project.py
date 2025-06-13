@@ -2,6 +2,8 @@ from pathlib import Path
 import json
 import matplotlib.pyplot as plt
 import requests
+import re
+
 
 name = input("이름을 입력해주세요.:")
 
@@ -37,10 +39,11 @@ def save_diary_data(date, name, diary, summary, advice, emotion):
 
 #사용자 일기 요약 함수
 def get_summary(diary):
+ try:
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={
-            "Authorization": "Bearer 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",
+            "Authorization": "Bearer ",
             "Content-Type": "application/json"
   },
         data=json.dumps({
@@ -54,24 +57,24 @@ def get_summary(diary):
     
   })
 )
-    if response.ok:
-        try:
-            result = response.json()
-            output = result["choices"][0]["message"]["content"]
-            return output
-        except Exception as e:
-            print("요약 파싱 오류:",e)
-            return "요약실패"
-    else:
-        print("요약 요청 실패:", response.status_code)
-        print("요청실패")
+    response.raise_for_status()
+    result = response.json()
+    return result["choices"][0]["message"]["content"]
+ except requests.exceptions.HTTPError as e:
+    print("요약 - HTTP 오류 발생:", e.response.status_code)
+    print("응답 내용:", e.response.text)
+    return "요약 실패"
+ except Exception as e:
+    print("요약 - 기타 오류 발생:", e)
+    return "요약 실패"
 
 #사용자 일기 조언 함수
 def get_advice(diary):
+ try:
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={
-            "Authorization": "Bearer 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",
+            "Authorization": "Bearer ",
             "Content-Type": "application/json"
   },
         data=json.dumps({
@@ -85,18 +88,16 @@ def get_advice(diary):
     
   })
 )
-    if response.ok:
-        try:
-            result = response.json()
-            output = result["choices"][0]["message"]["content"]
-            return output
-        except Exception as e:
-            print("조언 파싱 오류:", e)
-            return "조언 실패"
-    else:
-        print("조언 요청 실패:", response.status_code)
-        return "조언 실패"
-
+    response.raise_for_status()
+    result = response.json()
+    return result["choices"][0]["message"]["content"]
+ except requests.exceptions.HTTPError as e:
+    print("조언 - HTTP 오류 발생:", e.response.status_code)
+    print("응답 내용:", e.response.text)
+    return "조언 실패"
+ except Exception as e:
+    print("조언 - 기타 오류 발생:", e)
+    return "조언 실패"
        
 emotion ={}
 
@@ -106,44 +107,52 @@ def get_emotion_scores(diary):
     사용자의 일기를 바탕으로 감정을 분석하여 숫자(0~10)을 반환합니다.
     감정은 기쁨, 슬픔, 분노, 불안, 혐오, 놀람 6가지입니다.
     """
-    prompt = (
-        f"다음 일기를 읽고 감정을 0~10 숫자로 분석해줘.\n"
-        f"절대 설명없이, 정확히 이 JSON 형식으로만 응답해줘:\n"
-        f'예시는 다음과 같아. {{"기쁨": 8, "슬픔": 2, "분노": 1, "불안": 1, "혐오": 0, "놀람": 2}} \n'
-        f'{{"기쁨":숫자, "슬픔":숫자, "분노":숫자, "불안":숫자, "혐오":숫자, "놀람":숫자}}\n\n{diary}'
-    )
-    response = requests.post(
-        url="https://openrouter.ai/api/v1/chat/completions",
-        headers={
-            "Authorization": "Bearer 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",
-            "Content-Type": "application/json"
-  },
-        data=json.dumps({
-            "model": "deepseek/deepseek-r1-0528-qwen3-8b:free",
-            "messages": [
-            {
-                "role": "user",
-                "content": prompt
-            } 
-         ]
-     })
-    )
-    if response.ok:
-        try:
-            result = response.json()
-            content = result["choices"][0]["message"]["content"]
+    try:
+        prompt = (
+            f"다음 일기를 읽고 감정을 0~10 숫자로 분석해줘.\n"
+            f"절대 설명없이, 정확히 이 JSON 형식으로만 응답해줘:\n"
+            f'예시는 다음과 같아. {{"기쁨": 8, "슬픔": 2, "분노": 1, "불안": 1, "혐오": 0, "놀람": 2}} \n'
+            f'{{"기쁨":숫자, "슬픔":숫자, "분노":숫자, "불안":숫자, "혐오":숫자, "놀람":숫자}}\n\n{diary}'
+        )
+
+        response = requests.post(
+            url="https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": "Bearer ",
+                "Content-Type": "application/json"
+    },
+            data=json.dumps({
+                "model": "deepseek/deepseek-r1-0528-qwen3-8b:free",
+                "messages": [
+                {
+                    "role": "user",
+                    "content": prompt
+                } 
+            ]
+        })
+        )
+        response.raise_for_status()
+
+        result = response.json()
+        content = result["choices"][0]["message"]["content"]
+
+        match = re.search(r"\{.*?\}", content, re.DOTALL)
+        if match:
             try:
-                 emotion_data = json.loads(content)
-                 return emotion_data
-            except json.JSONDecodeError:
-                print("JSON 형식이 아님")
-                return{}
-        except Exception as e:
-            print("감정 분석을 불러오는 데 문제가 있어요:", e)
-            print("응답 내용:\n", result["choices"][0]["message"]["content"])
+                emotion_data = json.loads(match.group())
+                return emotion_data
+            except json.JSONDecodeError as e:
+                print("감정 분석 - JSON 파싱 실패:", e)
+                return {}
+        else:
+            print("감정 분석 - JSON 형식 감지 실패. 원문:", content)
             return {}
-    else:
-        print("감정 분석 요청실패", response.status_code)
+    except requests.exceptions.HTTPError as e:
+        print("감정 분석 - HTTP 오류 발생:", e.response.status_code)
+        print("응답 내용:", e.response.text)
+        return {}
+    except Exception as e:
+        print("감정 분석 - 기타 오류 발생:", e)
         return {}
 
 #감정분석 시각화 함수
@@ -249,21 +258,23 @@ def get_choices(choice:str):
 
 #사용자 질문 함수
 def main():
+    try:
+        while True:
+            print("\n무엇을 하시겠습니까?")
+            print("\n0. 프로그램 종료")
+            print("\n1. 오늘 일기 작성")
+            print("\n2. 과거 일기 확인")
+            print("\n3. 과거 일기 분석 보기")
+            choice = input("번호를 선택하세요: ").strip()
 
-    while True:
-        print("\n무엇을 하시겠습니까?")
-        print("\n0. 프로그램 종료")
-        print("\n1. 오늘 일기 작성")
-        print("\n2. 과거 일기 확인")
-        print("\n3. 과거 일기 분석 보기")
-        choice = input("번호를 선택하세요: ").strip()
-
-        if choice == '0':
-          print("프로그램을 종료합니다. 좋은 하루 보내세요!")
-          break 
+            if choice == '0':
+                print("프로그램을 종료합니다. 좋은 하루 보내세요!")
+                break 
     
-        else:
-            get_choices(choice)
+            else:
+                get_choices(choice)
+    except KeyboardInterrupt:
+        print("\n\n[사용자 종료] 프로그램을 종료합니다. 다음에 또 만나요!")
 
 if __name__ == "__main__":
     main()
