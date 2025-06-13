@@ -9,7 +9,7 @@ name = input("이름을 입력해주세요.:")
 DATA_SAVE = Path("diary_data")
 DATA_SAVE.mkdir(exist_ok = True)
 
-def save_diary_dta(date, name, diary, summary, advice, emotion):
+def save_diary_data(date, name, diary, summary, advice, emotion):
     """
     하루치 일기 데이터를 JSON 파일로 저장합니다
     
@@ -153,7 +153,7 @@ emotion_colors = {
     "분노": "#FF4500",   # 빨강
     "불안": "#9370DB",   # 보라
     "혐오": "#2E8B57",   # 초록
-    "놀람": "#E97E0B"    # 주황황
+    "놀람": "#E97E0B"    # 주황
 }
 
 def visualize_emotion_scores(emotion_scores, date_str):
@@ -202,7 +202,7 @@ def get_choices(choice:str):
         print("\n 요약:",summary)
         print("\n 조언:",advice)
 
-        save_diary_dta(date, name, diary, summary, advice, emotion)
+        save_diary_data(date, name, diary, summary, advice, emotion)
         visualize_emotion_scores(emotion, date)
 
     elif choice == '2':
@@ -222,14 +222,14 @@ def get_choices(choice:str):
             print(f"\n감정 분석 결과: ")
             for emotion, score in data["emotion"].items():
                 print(f" -{emotion}:{score}")
-            else:
-                print(f"\n {date}의 일기가 존재하지 않습니다.")
+        else:
+            print(f"\n {date}의 일기가 존재하지 않습니다.")
     
     elif choice == '3':
-        print("\n과거 일기를 분석합니다.")
-        #여기서 과거 저장 데이터 바탕으로 분석된 그래프 꺼내기
+        print("\n과거 일기의 감정 그래프를 확인합니다.")
+        date = input("확인할 날짜를 입력하세요. (예: 2025-06-09): ").strip()
 
-        img_path = DATA_SAVE / f"{name}_전체감정분석.png"
+        img_path = DATA_SAVE / f"{date}_emotion.png"
 
         if img_path.exists():
             print(f"\n감정 분석 이미지가 존재합니다: {img_path}")
@@ -242,7 +242,7 @@ def get_choices(choice:str):
 
         else:
             print(f"\n감정 분석 이미지가 존재하기 않습니다.")
-            print("먼저 전체 감정 분석을 생성하세요.")
+            print("해당 날짜에 일기를 작성했는지 확인해주세요.")
 
     else:
         print("잘못된 입력입니다. 1~3번 중 하나를 선택하여 주세요.")
@@ -252,11 +252,18 @@ def main():
 
     while True:
         print("\n무엇을 하시겠습니까?")
+        print("\n0. 프로그램 종료")
         print("\n1. 오늘 일기 작성")
         print("\n2. 과거 일기 확인")
         print("\n3. 과거 일기 분석 보기")
         choice = input("번호를 선택하세요: ").strip()
-        get_choices(choice)
+
+        if choice == '0':
+          print("프로그램을 종료합니다. 좋은 하루 보내내세요!")
+          break 
+    
+        else:
+            get_choices(choice)
 
 if __name__ == "__main__":
     main()
