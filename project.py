@@ -40,7 +40,7 @@ def get_summary(diary):
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={
-            "Authorization": "Bearer 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",
+            "Authorization": "Bearer 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",
             "Content-Type": "application/json"
   },
         data=json.dumps({
@@ -71,7 +71,7 @@ def get_advice(diary):
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={
-            "Authorization": "Bearer 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",
+            "Authorization": "Bearer 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",
             "Content-Type": "application/json"
   },
         data=json.dumps({
@@ -115,7 +115,7 @@ def get_emotion_scores(diary):
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={
-            "Authorization": "Bearer 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",
+            "Authorization": "Bearer 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",
             "Content-Type": "application/json"
   },
         data=json.dumps({
@@ -259,7 +259,7 @@ def main():
         choice = input("번호를 선택하세요: ").strip()
 
         if choice == '0':
-          print("프로그램을 종료합니다. 좋은 하루 보내내세요!")
+          print("프로그램을 종료합니다. 좋은 하루 보내세요!")
           break 
     
         else:
