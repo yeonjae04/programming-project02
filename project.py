@@ -40,11 +40,11 @@ def get_summary(diary):
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={
-            "Authorization": "Bearer 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",
+            "Authorization": "Bearer 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",
             "Content-Type": "application/json"
   },
         data=json.dumps({
-            "model": "meta-llama/llama-3.3-8b-instruct:free",
+            "model": "deepseek/deepseek-r1-0528-qwen3-8b:free",
             "messages": [
             {
                 "role": "user",
@@ -71,11 +71,11 @@ def get_advice(diary):
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={
-            "Authorization": "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",
+            "Authorization": "Bearer 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",
             "Content-Type": "application/json"
   },
         data=json.dumps({
-            "model": "meta-llama/llama-3.3-8b-instruct:free",
+            "model": "deepseek/deepseek-r1-0528-qwen3-8b:free",
             "messages": [
             {
                 "role": "user",
@@ -108,17 +108,18 @@ def get_emotion_scores(diary):
     """
     prompt = (
         f"다음 일기를 읽고 감정을 0~10 숫자로 분석해줘.\n"
-        f"정확히 이 JSON 형식으로만 응답해줘:\n"
+        f"절대 설명없이, 정확히 이 JSON 형식으로만 응답해줘:\n"
+        f'예시는 다음과 같아. {{"기쁨": 8, "슬픔": 2, "분노": 1, "불안": 1, "혐오": 0, "놀람": 2}} \n'
         f'{{"기쁨":숫자, "슬픔":숫자, "분노":숫자, "불안":숫자, "혐오":숫자, "놀람":숫자}}\n\n{diary}'
     )
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={
-            "Authorization": "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",
+            "Authorization": "Bearer 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",
             "Content-Type": "application/json"
-        },
+  },
         data=json.dumps({
-            "model": "meta-llama/llama-3.3-8b-instruct:free",
+            "model": "deepseek/deepseek-r1-0528-qwen3-8b:free",
             "messages": [
             {
                 "role": "user",
@@ -131,8 +132,12 @@ def get_emotion_scores(diary):
         try:
             result = response.json()
             content = result["choices"][0]["message"]["content"]
-            emotion_data = json.loads(content)
-            return emotion_data
+            try:
+                 emotion_data = json.loads(content)
+                 return emotion_data
+            except json.JSONDecodeError:
+                print("JSON 형식이 아님")
+                return{}
         except Exception as e:
             print("감정 분석을 불러오는 데 문제가 있어요:", e)
             print("응답 내용:\n", result["choices"][0]["message"]["content"])
@@ -162,7 +167,8 @@ def visualize_emotion_scores(emotion_scores, date_str):
     emotions = ['기쁨', '슬픔', '분노', '불안', '혐오', '놀람']
     scores = [emotion_scores.get(emotion,0) for emotion in emotions]
     colors= [ emotion_colors[emotion] for emotion in emotions]
-
+    
+    plt.rcParams['font.family'] = 'Malgun Gothic'
     plt.figure(figsize=(8,6))
     bars = plt.bar(emotions, scores, color = colors)
 
@@ -177,6 +183,7 @@ def visualize_emotion_scores(emotion_scores, date_str):
     img_path = DATA_SAVE / f"{date_str}_emotion.png"
     plt.tight_layout()
     plt.savefig(img_path)
+    plt.show()
     plt.close()
     print(f"감정 이미지 저장됨: {img_path}")
 
