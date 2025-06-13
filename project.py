@@ -101,7 +101,7 @@ def get_emotion_scores(diary):
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={
-            "Authorization": "Bearer <OPENROUTER_API_KEY>",
+            "Authorization": "Bearer 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",
             "Content-Type": "application/json"
         },
         data=json.dumps({
@@ -173,6 +173,7 @@ def visualize_emotion_scores(emotion_scores, date_str):
 #사용자 선택 처리 함수
 def get_choices(choice:str):
     if choice == '1':
+        date = input("오늘 날짜를 입력해주세요. (예: 2025-06-09): ").strip()
         print("\n오늘의 일기를 작성해주세요.")
         diary = input("\n오늘의 일기를 입력: ")
 
@@ -238,3 +239,6 @@ def main():
         print("\n3. 과거 일기 분석 보기")
         choice = input("번호를 선택하세요: ").strip()
         get_choices(choice)
+
+if __name__ == "__main__":
+    main()
